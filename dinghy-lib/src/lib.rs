@@ -11,7 +11,7 @@ pub mod config;
 pub mod device;
 mod host;
 #[cfg(target_os = "macos")]
-mod ios;
+mod apple;
 pub mod overlay;
 pub mod platform;
 pub mod project;
@@ -24,7 +24,7 @@ pub use crate::config::Configuration;
 
 use crate::config::PlatformConfiguration;
 #[cfg(target_os = "macos")]
-use crate::ios::IosManager;
+use crate::apple::IosManager;
 use crate::platform::regular_platform::RegularPlatform;
 use crate::project::Project;
 use anyhow::{anyhow, Context};
@@ -167,7 +167,7 @@ pub trait DeviceCompatibility {
     }
 
     #[cfg(target_os = "macos")]
-    fn is_compatible_with_ios_platform(&self, _platform: &ios::IosPlatform) -> bool {
+    fn is_compatible_with_ios_platform(&self, _platform: &apple::IosPlatform) -> bool {
         false
     }
 }

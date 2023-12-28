@@ -1,7 +1,7 @@
 use super::xcode;
 use crate::device::make_remote_app_with_name;
 use crate::errors::*;
-use crate::ios::IosPlatform;
+use crate::apple::IosPlatform;
 use crate::project::Project;
 use crate::utils::LogCommandExt;
 use crate::utils::{get_current_verbosity, user_facing_log};
