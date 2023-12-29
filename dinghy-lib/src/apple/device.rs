@@ -1,7 +1,7 @@
-use super::xcode;
+use super::{xcode, AppleSimulatorType};
 use crate::device::make_remote_app_with_name;
 use crate::errors::*;
-use crate::apple::IosPlatform;
+use crate::apple::AppleDevicePlatform;
 use crate::project::Project;
 use crate::utils::LogCommandExt;
 use crate::utils::{get_current_verbosity, user_facing_log};
@@ -27,10 +27,11 @@ pub struct IosDevice {
 }
 
 #[derive(Clone, Debug)]
-pub struct IosSimDevice {
+pub struct AppleSimDevice {
     pub id: String,
     pub name: String,
     pub os: String,
+    pub sim_type: AppleSimulatorType,
 }
 
 unsafe impl Send for IosDevice {}
@@ -191,7 +192,7 @@ impl Device for IosDevice {
     }
 }
 
-impl IosSimDevice {
+impl AppleSimDevice {
     fn install_app(
         &self,
         project: &Project,
@@ -203,7 +204,7 @@ impl IosSimDevice {
             &format!("{} to {}", build.runnable.id, self.id),
             0,
         );
-        let build_bundle = IosSimDevice::make_app(project, build, runnable)?;
+        let build_bundle = AppleSimDevice::make_app(project, build, runnable)?;
         let _ = process::Command::new("xcrun")
             .args(&["simctl", "uninstall", &self.id, "Dinghy"])
             .log_invocation(2)
@@ -236,7 +237,7 @@ impl IosSimDevice {
     }
 }
 
-impl Device for IosSimDevice {
+impl Device for AppleSimDevice {
     fn clean_app(&self, _build_bundle: &BuildBundle) -> Result<()> {
         unimplemented!()
     }
@@ -312,11 +313,11 @@ impl Display for IosDevice {
     }
 }
 
-impl Display for IosSimDevice {
+impl Display for AppleSimDevice {
     fn fmt(&self, fmt: &mut Formatter) -> fmt::Result {
         Ok(fmt.write_str(
             format!(
-                "IosSimDevice {{ \"id\": \"{}\", \"name\": {}, \"os\": {} }}",
+                "AppleSimDevice {{ \"id\": \"{}\", \"name\": {}, \"os\": {} }}",
                 self.id, self.name, self.os
             )
             .as_str(),
@@ -325,8 +326,8 @@ impl Display for IosSimDevice {
 }
 
 impl DeviceCompatibility for IosDevice {
-    fn is_compatible_with_ios_platform(&self, platform: &IosPlatform) -> bool {
-        if platform.sim {
+    fn is_compatible_with_simulator_platform(&self, platform: &AppleDevicePlatform) -> bool {
+        if platform.sim.is_some() {
             return false;
         }
 
@@ -337,9 +338,9 @@ impl DeviceCompatibility for IosDevice {
     }
 }
 
-impl DeviceCompatibility for IosSimDevice {
-    fn is_compatible_with_ios_platform(&self, platform: &IosPlatform) -> bool {
-        platform.sim
+impl DeviceCompatibility for AppleSimDevice {
+    fn is_compatible_with_simulator_platform(&self, platform: &AppleDevicePlatform) -> bool {
+        platform.sim.is_some()
             && (platform.toolchain.rustc_triple == "x86_64-apple-ios"
                 || platform.toolchain.rustc_triple == "aarch64-apple-ios-sim")
     }
@@ -372,7 +373,7 @@ fn make_ios_app(
     Ok(build_bundle)
 }
 
-fn launch_app(dev: &IosSimDevice, app_args: &[&str], _envs: &[&str]) -> Result<()> {
+fn launch_app(dev: &AppleSimDevice, app_args: &[&str], _envs: &[&str]) -> Result<()> {
     use std::io::Write;
     let dir = ::tempdir::TempDir::new("mobiledevice-rs-lldb")?;
     let tmppath = dir.path();
@@ -463,7 +464,7 @@ fn launch_app(dev: &IosSimDevice, app_args: &[&str], _envs: &[&str]) -> Result<(
 }
 
 fn launch_lldb_simulator(
-    dev: &IosSimDevice,
+    dev: &AppleSimDevice,
     installed: &str,
     args: &[&str],
     envs: &[&str],
