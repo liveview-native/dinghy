@@ -86,6 +86,9 @@ pub fn add_plist_to_tvos_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &s
         "<key>CFBundleIdentifier</key><string>{}</string>",
         app_bundle_id
     )?;
+    writeln!(
+        plist, r#"<key>CFBundleIconFiles</key><array></array>"#,
+    )?;
     writeln!(plist, "<key>UIRequiredDeviceCapabilities</key>")?;
     writeln!(plist, "<array><string>{}</string></array>", arch)?;
     writeln!(plist, "<key>CFBundleVersion</key>")?;
@@ -100,22 +103,33 @@ pub fn add_plist_to_tvos_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &s
 
 pub fn add_plist_to_watchos_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &str) -> Result<()> {
     let mut plist = fs::File::create(bundle.bundle_dir.join("Info.plist"))?;
+    writeln!(plist, r#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
+    writeln!(
+        plist,
+        r#"<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">"#
+    )?;
+    writeln!(plist, r#"<plist version="1.0"><dict>"#)?;
+    writeln!(
+        plist,
+        "<key>CFBundleExecutable</key><string>Dinghy</string>",
+    )?;
+    writeln!(
+        plist,
+        "<key>CFBundleIdentifier</key><string>{}</string>",
+        app_bundle_id
+    )?;
+    writeln!(plist, "<key>CFBundleVersion</key>")?;
+    writeln!(plist, "<string>{}</string>", arch)?;
+    writeln!(plist, "<key>CFBundleShortVersionString</key>")?;
+    writeln!(plist, "<string>{}</string>", arch)?;
+    writeln!(plist, "<key>UILaunchStoryboardName</key>")?;
+    writeln!(plist, "<string></string>")?;
 
     let plist_data = r#"
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleExecutable</key>
-    <string>integration_test</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.rust.tests</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
     <key>CFBundleSupportedPlatforms</key>
     <array>
         <string>WatchSimulator</string>
@@ -156,36 +170,9 @@ pub fn add_plist_to_watchos_app(bundle: &BuildBundle, arch: &str, app_bundle_id:
     <key>WKApplication</key>
     <true/>
     <key>WKWatchOnly</key>
-    <true/>
-</dict>
-</plist>"#;
-    write!(plist, "{plist_data}");
-    /*
-    writeln!(plist, r#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
-    writeln!(
-        plist,
-        r#"<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">"#
-    )?;
-    writeln!(plist, r#"<plist version="1.0"><dict>"#)?;
-    writeln!(
-        plist,
-        "<key>CFBundleExecutable</key><string>Dinghy</string>",
-    )?;
-    writeln!(
-        plist,
-        "<key>CFBundleIdentifier</key><string>{}</string>",
-        app_bundle_id
-    )?;
-    writeln!(plist, "<key>UIRequiredDeviceCapabilities</key>")?;
-    writeln!(plist, "<array><string>{}</string></array>", arch)?;
-    writeln!(plist, "<key>CFBundleVersion</key>")?;
-    writeln!(plist, "<string>{}</string>", arch)?;
-    writeln!(plist, "<key>CFBundleShortVersionString</key>")?;
-    writeln!(plist, "<string>{}</string>", arch)?;
-    writeln!(plist, "<key>UILaunchStoryboardName</key>")?;
-    writeln!(plist, "<string></string>")?;
+    <true/>"#;
+    write!(plist, "{plist_data}")?;
     writeln!(plist, r#"</dict></plist>"#)?;
-    */
     Ok(())
 }
 
