@@ -83,7 +83,16 @@ pub fn add_plist_to_tvos_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &s
     )?;
     writeln!(
         plist,
+        "<key>CFBundleDisplayName</key><string>Dinghy</string>",
+    )?;
+    writeln!(
+        plist,
         "<key>CFBundleIdentifier</key><string>{}</string>",
+        app_bundle_id
+    )?;
+    writeln!(
+        plist,
+        "<key>CFBundleName</key><string>{}</string>",
         app_bundle_id
     )?;
     writeln!(
@@ -122,56 +131,9 @@ pub fn add_plist_to_watchos_app(bundle: &BuildBundle, arch: &str, app_bundle_id:
     writeln!(plist, "<string>{}</string>", arch)?;
     writeln!(plist, "<key>CFBundleShortVersionString</key>")?;
     writeln!(plist, "<string>{}</string>", arch)?;
-    writeln!(plist, "<key>UILaunchStoryboardName</key>")?;
-    writeln!(plist, "<string></string>")?;
-
-    let plist_data = r#"
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleSupportedPlatforms</key>
-    <array>
-        <string>WatchSimulator</string>
-    </array>
-    <key>CFBundleVersion</key>
-    <string>1</string>
-    <key>DTCompiler</key>
-    <string>com.apple.compilers.llvm.clang.1_0</string>
-    <key>DTPlatformBuild</key>
-    <string>21R354</string>
-    <key>DTPlatformName</key>
-    <string>watchsimulator</string>
-    <key>DTPlatformVersion</key>
-    <string>10.0</string>
-    <key>DTSDKBuild</key>
-    <string>21R354</string>
-    <key>DTSDKName</key>
-    <string>watchsimulator10.0</string>
-    <key>DTXcode</key>
-    <string>1501</string>
-    <key>DTXcodeBuild</key>
-    <string>15A507</string>
-    <key>MinimumOSVersion</key>
-    <string>9.0</string>
-    <key>MinimumOSVersion~ipad</key>
-    <string>9.0</string>
-    <key>NSAccentColorName</key>
-    <string>AccentColor</string>
-    <key>UIDeviceFamily</key>
-    <array>
-        <integer>4</integer>
-    </array>
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationPortraitUpsideDown</string>
-    </array>
-    <key>WKApplication</key>
-    <true/>
-    <key>WKWatchOnly</key>
-    <true/>"#;
-    write!(plist, "{plist_data}")?;
+    writeln!(plist, "<key>MinimumOSVersion</key><string>8.0</string>",)?;
+    writeln!(plist, "<key>WKApplication</key><true/>",)?;
+    writeln!(plist, "<key>WKWatchOnly</key><true/>")?;
     writeln!(plist, r#"</dict></plist>"#)?;
     Ok(())
 }
