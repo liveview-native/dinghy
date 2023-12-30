@@ -204,7 +204,7 @@ impl AppleSimDevice {
             &format!("{} to {}", build.runnable.id, self.id),
             0,
         );
-        let build_bundle = AppleSimDevice::make_app(project, build, runnable)?;
+        let build_bundle = self.make_app(project, build, runnable)?;
         let _ = process::Command::new("xcrun")
             .args(&["simctl", "uninstall", &self.id, "Dinghy"])
             .log_invocation(2)
@@ -232,8 +232,12 @@ impl AppleSimDevice {
         }
     }
 
-    fn make_app(project: &Project, build: &Build, runnable: &Runnable) -> Result<BuildBundle> {
-        make_ios_app(project, build, runnable, "Dinghy")
+    fn make_app(&self, project: &Project, build: &Build, runnable: &Runnable) -> Result<BuildBundle> {
+        match self.sim_type {
+            AppleSimulatorType::Ios => make_ios_app(project, build, runnable, "Dinghy"),
+            AppleSimulatorType::Watchos => make_watchos_app(project, build, runnable, "Dinghy"),
+            AppleSimulatorType::Tvos => make_tvos_app(project, build, runnable, "Dinghy"),
+        }
     }
 }
 
@@ -340,9 +344,11 @@ impl DeviceCompatibility for IosDevice {
 
 impl DeviceCompatibility for AppleSimDevice {
     fn is_compatible_with_simulator_platform(&self, platform: &AppleDevicePlatform) -> bool {
-        platform.sim.is_some()
-            && (platform.toolchain.rustc_triple == "x86_64-apple-ios"
-                || platform.toolchain.rustc_triple == "aarch64-apple-ios-sim")
+        if let Some(sim) = &platform.sim {
+            self.sim_type == *sim
+        } else {
+            false
+        }
     }
 }
 
@@ -369,7 +375,61 @@ fn make_ios_app(
         .split(" ")
         .last()
         .ok_or_else(|| anyhow!("empty magic"))?;
-    xcode::add_plist_to_app(&build_bundle, target, app_id)?;
+    xcode::add_plist_to_ios_app(&build_bundle, target, app_id)?;
+    Ok(build_bundle)
+}
+
+fn make_watchos_app(
+    project: &Project,
+    build: &Build,
+    runnable: &Runnable,
+    app_id: &str,
+) -> Result<BuildBundle> {
+    use crate::project;
+    let build_bundle = make_remote_app_with_name(project, build, Some("Dinghy.app"))?;
+    project::rec_copy(&runnable.exe, build_bundle.bundle_dir.join("Dinghy"), false)?;
+    let magic = process::Command::new("file")
+        .arg(
+            runnable
+                .exe
+                .to_str()
+                .ok_or_else(|| anyhow!("path conversion to string: {:?}", runnable.exe))?,
+        )
+        .log_invocation(3)
+        .output()?;
+    let magic = String::from_utf8(magic.stdout)?;
+    let target = magic
+        .split(" ")
+        .last()
+        .ok_or_else(|| anyhow!("empty magic"))?;
+    xcode::add_plist_to_watchos_app(&build_bundle, target, app_id)?;
+    Ok(build_bundle)
+}
+
+fn make_tvos_app(
+    project: &Project,
+    build: &Build,
+    runnable: &Runnable,
+    app_id: &str,
+) -> Result<BuildBundle> {
+    use crate::project;
+    let build_bundle = make_remote_app_with_name(project, build, Some("Dinghy.app"))?;
+    project::rec_copy(&runnable.exe, build_bundle.bundle_dir.join("Dinghy"), false)?;
+    let magic = process::Command::new("file")
+        .arg(
+            runnable
+                .exe
+                .to_str()
+                .ok_or_else(|| anyhow!("path conversion to string: {:?}", runnable.exe))?,
+        )
+        .log_invocation(3)
+        .output()?;
+    let magic = String::from_utf8(magic.stdout)?;
+    let target = magic
+        .split(" ")
+        .last()
+        .ok_or_else(|| anyhow!("empty magic"))?;
+    xcode::add_plist_to_tvos_app(&build_bundle, target, app_id)?;
     Ok(build_bundle)
 }
 

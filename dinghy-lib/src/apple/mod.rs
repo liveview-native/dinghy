@@ -27,7 +27,7 @@ pub struct SigningIdentity {
     pub team: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AppleSimulatorType {
     Ios,
     Watchos,
@@ -135,7 +135,7 @@ impl PlatformManager for WatchosManager {
                 format!("aarch64-apple-watchos-sim")
             };
             let simulator = if *arch == "x86_64-sim" || *arch == "aarch64-sim" {
-                Some(AppleSimulatorType::Tvos)
+                Some(AppleSimulatorType::Watchos)
             } else {
                 None
             };

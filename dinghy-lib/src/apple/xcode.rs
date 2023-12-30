@@ -7,7 +7,7 @@ use std::{fs, io, process};
 use crate::utils::LogCommandExt;
 use crate::BuildBundle;
 
-pub fn add_plist_to_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &str) -> Result<()> {
+pub fn add_plist_to_ios_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &str) -> Result<()> {
     let mut plist = fs::File::create(bundle.bundle_dir.join("Info.plist"))?;
     writeln!(plist, r#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
     writeln!(
@@ -66,6 +66,125 @@ pub fn add_plist_to_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &str) -
 
     project.rec_copy(&source, &app_path, false)?;
     project.copy_test_data(&app_path)?;
+    */
+    Ok(())
+}
+pub fn add_plist_to_tvos_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &str) -> Result<()> {
+    let mut plist = fs::File::create(bundle.bundle_dir.join("Info.plist"))?;
+    writeln!(plist, r#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
+    writeln!(
+        plist,
+        r#"<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">"#
+    )?;
+    writeln!(plist, r#"<plist version="1.0"><dict>"#)?;
+    writeln!(
+        plist,
+        "<key>CFBundleExecutable</key><string>Dinghy</string>",
+    )?;
+    writeln!(
+        plist,
+        "<key>CFBundleIdentifier</key><string>{}</string>",
+        app_bundle_id
+    )?;
+    writeln!(plist, "<key>UIRequiredDeviceCapabilities</key>")?;
+    writeln!(plist, "<array><string>{}</string></array>", arch)?;
+    writeln!(plist, "<key>CFBundleVersion</key>")?;
+    writeln!(plist, "<string>{}</string>", arch)?;
+    writeln!(plist, "<key>CFBundleShortVersionString</key>")?;
+    writeln!(plist, "<string>{}</string>", arch)?;
+    writeln!(plist, "<key>UILaunchStoryboardName</key>")?;
+    writeln!(plist, "<string></string>")?;
+    writeln!(plist, r#"</dict></plist>"#)?;
+    Ok(())
+}
+
+pub fn add_plist_to_watchos_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &str) -> Result<()> {
+    let mut plist = fs::File::create(bundle.bundle_dir.join("Info.plist"))?;
+
+    let plist_data = r#"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>integration_test</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.rust.tests</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+        <string>WatchSimulator</string>
+    </array>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>DTCompiler</key>
+    <string>com.apple.compilers.llvm.clang.1_0</string>
+    <key>DTPlatformBuild</key>
+    <string>21R354</string>
+    <key>DTPlatformName</key>
+    <string>watchsimulator</string>
+    <key>DTPlatformVersion</key>
+    <string>10.0</string>
+    <key>DTSDKBuild</key>
+    <string>21R354</string>
+    <key>DTSDKName</key>
+    <string>watchsimulator10.0</string>
+    <key>DTXcode</key>
+    <string>1501</string>
+    <key>DTXcodeBuild</key>
+    <string>15A507</string>
+    <key>MinimumOSVersion</key>
+    <string>9.0</string>
+    <key>MinimumOSVersion~ipad</key>
+    <string>9.0</string>
+    <key>NSAccentColorName</key>
+    <string>AccentColor</string>
+    <key>UIDeviceFamily</key>
+    <array>
+        <integer>4</integer>
+    </array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    </array>
+    <key>WKApplication</key>
+    <true/>
+    <key>WKWatchOnly</key>
+    <true/>
+</dict>
+</plist>"#;
+    write!(plist, "{plist_data}");
+    /*
+    writeln!(plist, r#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
+    writeln!(
+        plist,
+        r#"<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">"#
+    )?;
+    writeln!(plist, r#"<plist version="1.0"><dict>"#)?;
+    writeln!(
+        plist,
+        "<key>CFBundleExecutable</key><string>Dinghy</string>",
+    )?;
+    writeln!(
+        plist,
+        "<key>CFBundleIdentifier</key><string>{}</string>",
+        app_bundle_id
+    )?;
+    writeln!(plist, "<key>UIRequiredDeviceCapabilities</key>")?;
+    writeln!(plist, "<array><string>{}</string></array>", arch)?;
+    writeln!(plist, "<key>CFBundleVersion</key>")?;
+    writeln!(plist, "<string>{}</string>", arch)?;
+    writeln!(plist, "<key>CFBundleShortVersionString</key>")?;
+    writeln!(plist, "<string>{}</string>", arch)?;
+    writeln!(plist, "<key>UILaunchStoryboardName</key>")?;
+    writeln!(plist, "<string></string>")?;
+    writeln!(plist, r#"</dict></plist>"#)?;
     */
     Ok(())
 }

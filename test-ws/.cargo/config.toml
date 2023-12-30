@@ -1,0 +1,8 @@
+[target.aarch64-apple-watchos-sim]
+runner = "cargo run --manifest-path ../Cargo.toml --bin cargo-dinghy -- -p auto-watchos-aarch64-sim runner"
+
+[target.aarch64-apple-tvos-sim]
+runner = "cargo run --manifest-path ../Cargo.toml --bin cargo-dinghy -- -p auto-tvos-aarch64-sim runner"
+
+[target.aarch64-apple-ios-sim]
+runner = "cargo run --manifest-path ../Cargo.toml --bin cargo-dinghy -- -p auto-ios-aarch64-sim runner"
