@@ -458,6 +458,7 @@ fn launch_app(dev: &AppleSimDevice, app_args: &[&str], _envs: &[&str]) -> Result
         .log_invocation(1)
         .output()?;
     let launch_output = String::from_utf8_lossy(&launch_output.stdout);
+    debug!("xcrun simctl launch output: {:?}", launch_output);
 
     // Output from the launch command should be "Dinghy: $PID" which is after the 8th character.
     let dinghy_pid = launch_output.split_at(8).1;
@@ -519,7 +520,7 @@ fn launch_app(dev: &AppleSimDevice, app_args: &[&str], _envs: &[&str]) -> Result
             );
         }
     } else {
-        panic!("Failed to get the exit status line from lldb: {:?}", output);
+        panic!("Failed to get the exit status line from lldb: {}", output);
     }
 }
 

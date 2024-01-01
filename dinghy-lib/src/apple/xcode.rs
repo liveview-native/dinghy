@@ -69,6 +69,7 @@ pub fn add_plist_to_ios_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &st
     */
     Ok(())
 }
+
 pub fn add_plist_to_tvos_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &str) -> Result<()> {
     let mut plist = fs::File::create(bundle.bundle_dir.join("Info.plist"))?;
     writeln!(plist, r#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
@@ -83,20 +84,8 @@ pub fn add_plist_to_tvos_app(bundle: &BuildBundle, arch: &str, app_bundle_id: &s
     )?;
     writeln!(
         plist,
-        "<key>CFBundleDisplayName</key><string>Dinghy</string>",
-    )?;
-    writeln!(
-        plist,
         "<key>CFBundleIdentifier</key><string>{}</string>",
         app_bundle_id
-    )?;
-    writeln!(
-        plist,
-        "<key>CFBundleName</key><string>{}</string>",
-        app_bundle_id
-    )?;
-    writeln!(
-        plist, r#"<key>CFBundleIconFiles</key><array></array>"#,
     )?;
     writeln!(plist, "<key>UIRequiredDeviceCapabilities</key>")?;
     writeln!(plist, "<array><string>{}</string></array>", arch)?;
