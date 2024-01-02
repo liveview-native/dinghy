@@ -60,16 +60,10 @@ tests_sequence() {
     )
 }
 
-tests_sequence_with_runners() {
-    title "testing from workspace directory"
-    ( \
-        cd test-ws \
-        && cargo clean \
-        &&   cargo +nightly test -Zbuild-std --target $1 pass \
-        && ! cargo +nightly test -Zbuild-std --target $1 fails \
-        && ! cargo +nightly test -Zbuild-std --target $1 test \
-    )
-
+tests_sequence_unstable_targets() {
+    # There's something odd with using the .cargo/config runner attribute and
+    # workspaces when the runner uses `cargo run --manifest-path ../Cargo.toml
+    # --bin cargo-dinghy ...`
     title "testing from project directory"
     ( \
         cd test-ws/test-app \
@@ -77,15 +71,6 @@ tests_sequence_with_runners() {
         &&   cargo +nightly test -Zbuild-std --target $1 pass \
         && ! cargo +nightly test -Zbuild-std --target $1 fails \
         && ! cargo +nightly test -Zbuild-std --target $1 test \
-    )
-
-    title "test from workspace directory with project filter"
-    ( \
-        cd test-ws \
-        && cargo clean \
-        &&   cargo +nightly test -p test-app -Zbuild-std --target $1 pass \
-        && ! cargo +nightly test -p test-app -Zbuild-std --target $1 fails \
-        && ! cargo +nightly test -p test-app -Zbuild-std --target $1 \
     )
 }
 
@@ -112,22 +97,22 @@ then
 
      title "••••• Darwin: tvos simulator tests •••••"
      title "boot a simulator"
-     rustup toolchain add nightly --components rust-src;
+     rustup toolchain add nightly --component rust-src;
      TVOS_RUNTIME_ID=$(xcrun simctl list runtimes | grep tvOS | cut -d ' ' -f 7 | tail -1)
      export TV_SIM_ID=$(xcrun simctl create My-4ktv com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K $TVOS_RUNTIME_ID)
 
      xcrun simctl boot $TV_SIM_ID
-     tests_sequence_with_runners x86_64-apple-tvos
+     tests_sequence_unstable_targets x86_64-apple-tvos
      xcrun simctl delete $TV_SIM_ID
 
      title "••••• Darwin: watchvos simulator tests •••••"
      title "boot a simulator"
-     rustup toolchain add nightly --components rust-src;
+     rustup toolchain add nightly --component rust-src;
      WATCHOS_RUNTIME_ID=$(xcrun simctl list runtimes | grep watchOS | cut -d ' ' -f 7 | tail -1)
      export WATCHOS_SIM_ID=$(xcrun simctl create My-apple-watch com.apple.CoreSimulator.SimDeviceType.Apple-Watch-SE-44mm-2nd-generation $WATCHOS_RUNTIME_ID)
 
      xcrun simctl boot $WATCHOS_SIM_ID
-     tests_sequence_with_runners x86_64-apple-watchos-sim
+     tests_sequence_unstable_targets x86_64-apple-watchos-sim
      xcrun simctl delete $WATCHOS_SIM_ID
 else
     if [ -n "$ANDROID_SDK_ROOT" ]
