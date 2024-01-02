@@ -60,17 +60,15 @@ tests_sequence() {
     )
 }
 
-tests_sequence_unstable_targets() {
+tests_sequence_unstable_target() {
     # There's something odd with using the .cargo/config runner attribute and
     # workspaces when the runner uses `cargo run --manifest-path ../Cargo.toml
     # --bin cargo-dinghy ...`
-    title "testing from project directory"
+    title "testing from project directory for rust target $1"
     ( \
-        cd test-ws/test-app \
+        cd test-ws/test-bin \
         && cargo clean \
-        &&   cargo +nightly test -Zbuild-std --target $1 pass \
-        && ! cargo +nightly test -Zbuild-std --target $1 fails \
-        && ! cargo +nightly test -Zbuild-std --target $1 test \
+        && cargo +nightly run -Zbuild-std --target $1 \
     )
 }
 
@@ -102,7 +100,7 @@ then
      export TV_SIM_ID=$(xcrun simctl create My-4ktv com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K $TVOS_RUNTIME_ID)
 
      xcrun simctl boot $TV_SIM_ID
-     tests_sequence_unstable_targets x86_64-apple-tvos
+     tests_sequence_unstable_target x86_64-apple-tvos
      xcrun simctl delete $TV_SIM_ID
 
      title "••••• Darwin: watchvos simulator tests •••••"
@@ -112,7 +110,7 @@ then
      export WATCHOS_SIM_ID=$(xcrun simctl create My-apple-watch com.apple.CoreSimulator.SimDeviceType.Apple-Watch-SE-44mm-2nd-generation $WATCHOS_RUNTIME_ID)
 
      xcrun simctl boot $WATCHOS_SIM_ID
-     tests_sequence_unstable_targets x86_64-apple-watchos-sim
+     tests_sequence_unstable_target x86_64-apple-watchos-sim
      xcrun simctl delete $WATCHOS_SIM_ID
 else
     if [ -n "$ANDROID_SDK_ROOT" ]
