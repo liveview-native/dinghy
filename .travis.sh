@@ -4,7 +4,7 @@ set -x
 
 title() {
     set +x
-    echo -e '\n\033[1;33m '$@' \033[0m\n' 
+    echo -e '\n\033[1;33m '$@' \033[0m\n'
     set -x
 }
 
@@ -40,7 +40,7 @@ tests_sequence() {
         && ! $CARGO_DINGHY -d $1 test fails \
         && ! $CARGO_DINGHY -d $1 test \
     )
- 
+
     title "testing from project directory"
     ( \
         cd test-ws/test-app \
@@ -49,7 +49,7 @@ tests_sequence() {
         && ! $CARGO_DINGHY -d $1 test fails \
         && ! $CARGO_DINGHY -d $1 test \
     )
- 
+
     title "test from workspace directory with project filter"
     ( \
         cd test-ws \
@@ -60,6 +60,35 @@ tests_sequence() {
     )
 }
 
+tests_sequence_with_runners() {
+    title "testing from workspace directory"
+    ( \
+        cd test-ws \
+        && cargo clean \
+        &&   cargo +nightly test -Zbuild-std --target $1 pass \
+        && ! cargo +nightly test -Zbuild-std --target $1 fails \
+        && ! cargo +nightly test -Zbuild-std --target $1 test \
+    )
+
+    title "testing from project directory"
+    ( \
+        cd test-ws/test-app \
+        && cargo clean \
+        &&   cargo +nightly test -Zbuild-std --target $1 pass \
+        && ! cargo +nightly test -Zbuild-std --target $1 fails \
+        && ! cargo +nightly test -Zbuild-std --target $1 test \
+    )
+
+    title "test from workspace directory with project filter"
+    ( \
+        cd test-ws \
+        && cargo clean \
+        &&   cargo +nightly test -p test-app -Zbuild-std --target $1 pass \
+        && ! cargo +nightly test -p test-app -Zbuild-std --target $1 fails \
+        && ! cargo +nightly test -p test-app -Zbuild-std --target $1 \
+    )
+}
+
 
 if [ `uname` = Darwin ]
 then
@@ -67,12 +96,12 @@ then
      title "boot a simulator"
      rustup target add x86_64-apple-ios;
      RUNTIME_ID=$(xcrun simctl list runtimes | grep iOS | cut -d ' ' -f 7 | tail -1)
-     export SIM_ID=$(xcrun simctl create My-iphone7 com.apple.CoreSimulator.SimDeviceType.iPhone-8 $RUNTIME_ID)
+     export SIM_ID=$(xcrun simctl create My-iphone8 com.apple.CoreSimulator.SimDeviceType.iPhone-8 $RUNTIME_ID)
      xcrun simctl boot $SIM_ID
      tests_sequence $SIM_ID
 
      xcrun simctl delete $SIM_ID
-    
+
     if ios-deploy -c -t 1 > /tmp/ios_devices
     then
         device=$(grep "Found" /tmp/ios_devices | head -1 | cut -d " " -f 3)
@@ -80,6 +109,26 @@ then
         rustup target add aarch64-apple-ios
         tests_sequence $device
     fi
+
+     title "••••• Darwin: tvos simulator tests •••••"
+     title "boot a simulator"
+     rustup toolchain add nightly --components rust-src;
+     TVOS_RUNTIME_ID=$(xcrun simctl list runtimes | grep tvOS | cut -d ' ' -f 7 | tail -1)
+     export TV_SIM_ID=$(xcrun simctl create My-4ktv com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K $TVOS_RUNTIME_ID)
+
+     xcrun simctl boot $TV_SIM_ID
+     tests_sequence_with_runners x86_64-apple-tvos
+     xcrun simctl delete $TV_SIM_ID
+
+     title "••••• Darwin: watchvos simulator tests •••••"
+     title "boot a simulator"
+     rustup toolchain add nightly --components rust-src;
+     WATCHOS_RUNTIME_ID=$(xcrun simctl list runtimes | grep watchOS | cut -d ' ' -f 7 | tail -1)
+     export WATCHOS_SIM_ID=$(xcrun simctl create My-apple-watch com.apple.CoreSimulator.SimDeviceType.Apple-Watch-SE-44mm-2nd-generation $WATCHOS_RUNTIME_ID)
+
+     xcrun simctl boot $WATCHOS_SIM_ID
+     tests_sequence_with_runners x86_64-apple-watchos-sim
+     xcrun simctl delete $WATCHOS_SIM_ID
 else
     if [ -n "$ANDROID_SDK_ROOT" ]
     then
@@ -106,7 +155,7 @@ else
         echo no | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager create avd -n testdinghy -k "system-images;android-24;default;armeabi-v7a"
         $EMULATOR @testdinghy -no-audio -no-boot-anim -no-window -accel on -gpu off &
         timeout 180 $ANDROID_SDK_ROOT/platform-tools/adb wait-for-device
-     
+
         export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/22.1.7171670
 
         tests_sequence android
